@@ -421,6 +421,90 @@ std::vector<instruction_ref> mlir_contiguous(module_pass_manager& mpm,
     return result;
 }
 
+struct find_mlir_split_reduce
+{
+    mlir_mode conv_mode = mlir_mode::none;
+    mlir_mode dot_mode  = mlir_mode::none;
+    auto matcher() const
+    {
+        auto dot_or_conv = match::name("gpu::mlir_op");
+        // TODO: Handle reshapes inbetween
+        return mlir_split_reduce()(match::any_of[match::inputs()](dot_or_conv.bind("gemm")));
+    }
+
+    void apply(module_pass_manager& mpm, const match::matcher_result& r) const
+    {
+        auto reduce_ins = r.result;
+        auto gemm_ins   = r.instructions["gemm"];
+        assert(gemm_ins->get_shape().sub_shapes().empty());
+        auto* rm   = reduce_ins->module_inputs().front();
+        auto names = rm->get_parameter_names();
+        std::sort(names.begin(), names.end());
+        module_ref gemm_old_mm = gemm_ins->module_inputs().front();
+        module_ref mm = mpm.create_module(gemm_old_mm->name() + "_" + rm->name(), *gemm_old_mm);
+        // remove last return instruction
+        if(std::prev(mm->end())->name() == "@return")
+        {
+            mm->remove_instruction(std::prev(mm->end()));
+        }
+        mm->set_bypass();
+        std::unordered_map<instruction_ref, instruction_ref> param_map;
+        param_map[gemm_ins]      = std::prev(mm->end());
+        bool gemm_has_multi_outs = gemm_ins->outputs().size() > 1;
+        auto return_vals =
+            mm->fuse(*rm,
+                     reduce_ins->inputs(),
+                     &param_map,
+                     [&](module& main_mod,
+                         instruction_ref pos,
+                         const operation& op,
+                         const std::vector<instruction_ref>& inputs,
+                         const std::vector<module_ref>& mod_args) {
+                         if(op.name() == "pointwise")
+                         {
+                             auto* sub_pm     = mod_args.front();
+                             auto param_map_2 = create_param_map_with_literals(
+                                 &main_mod, sub_pm, op.compute_shape(to_shapes(inputs), mod_args));
+                             return main_mod.insert_inline(pos, *sub_pm, inputs, &param_map_2)
+                                 .front(); // cppcheck-suppress returnDanglingLifetime;
+                         }
+                         return main_mod.insert_instruction(pos, op, inputs, mod_args);
+                     });
+        if(gemm_has_multi_outs)
+        {
+            return_vals.insert(return_vals.end(), param_map[gemm_ins]);
+        }
+        mm->add_return(return_vals);
+        std::vector<instruction_ref> inputs;
+        std::copy_if(reduce_ins->inputs().begin(),
+                     reduce_ins->inputs().end(),
+                     std::back_inserter(inputs),
+                     [&](auto input) { return input != gemm_ins; });
+        inputs.insert(inputs.end(), gemm_ins->inputs().begin(), gemm_ins->inputs().end());
+        if(gemm_has_multi_outs)
+        {
+            auto fused_ins = mpm.get_module().insert_instruction(
+                reduce_ins, mlir_op{gemm_ins->get_operator()}, mlir_contiguous(mpm, inputs), {mm});
+            auto dot_ins = mpm.get_module().insert_instruction(
+                reduce_ins,
+                migraphx::make_op("get_tuple_elem", {{"index", return_vals.size() - 1}}),
+                fused_ins);
+
+            mpm.get_module().replace_instruction(gemm_ins, dot_ins);
+            for(const auto& outs : reduce_ins->outputs())
+            {
+                assert(outs->get_operator().name() == "get_tuple_elem");
+                mpm.get_module().replace_instruction(outs, outs->get_operator(), fused_ins);
+            }
+        }
+        else
+        {
+            mpm.get_module().replace_instruction(
+                reduce_ins, mlir_op{gemm_ins->get_operator()}, mlir_contiguous(mpm, inputs), {mm});
+        }
+    }
+};
+
 struct find_mlir_fused_ops
 {
     mlir_mode conv_mode = mlir_mode::none;
