@@ -1,7 +1,7 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015-2024 Advanced Micro Devices, Inc. All rights reserved.
+ * Copyright (c) 2015-2023 Advanced Micro Devices, Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,38 +21,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-<<<<<<<< HEAD:src/include/migraphx/quantize_int4.hpp
-#ifndef MIGRAPHX_GUARD_RTGLIB_QUANTIZE_INT4_HPP
-#define MIGRAPHX_GUARD_RTGLIB_QUANTIZE_INT4_HPP
-========
-#ifndef MIGRAPHX_GUARD_RTGLIB_QUANTIZE_FP16_HPP
-#define MIGRAPHX_GUARD_RTGLIB_QUANTIZE_FP16_HPP
->>>>>>>> parent of 306122429 (Generic "truncate float" class for quantization (#3604)):src/include/migraphx/quantize_fp16.hpp
+#ifndef MIGRAPHX_GUARD_RTGLIB_TRUNCATE_FLOAT_HPP
+#define MIGRAPHX_GUARD_RTGLIB_TRUNCATE_FLOAT_HPP
 
 #include <string>
 #include <vector>
 #include <migraphx/config.hpp>
+#include <migraphx/shape.hpp>
 
 namespace migraphx {
 inline namespace MIGRAPHX_INLINE_NS {
 
-<<<<<<<< HEAD:src/include/migraphx/quantize_int4.hpp
 struct program;
 struct module;
 
 /**
- * quantize a program to int4
+ * quantize a program to fp
  */
-struct MIGRAPHX_EXPORT quantize_int4_pass
+struct MIGRAPHX_EXPORT truncate_float_pass
 {
-    std::vector<std::string> ins_names;
-    std::string name() const { return "quantize_int4"; }
+    std::vector<std::string> ins_names = {"all"};
+    shape::type_t float_type           = shape::float_type;
+    std::string name() const { return "truncate_float"; }
     void apply(module& m) const;
 };
-========
-/// encode string to base64
-std::string MIGRAPHX_EXPORT base64_encode(const std::string& str);
->>>>>>>> parent of 306122429 (Generic "truncate float" class for quantization (#3604)):src/include/migraphx/quantize_fp16.hpp
 
 } // namespace MIGRAPHX_INLINE_NS
 } // namespace migraphx
