@@ -86,3 +86,9 @@ depend*/
 
 # local Python virtual environment
 .venv/
+/--build_6.2
+/-build_6.2
+/deps
+/mlar
+/-vcpkg.json
+/Jenkinsfile
