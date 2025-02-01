@@ -23,7 +23,7 @@
  */
 #include <migraphx/float_equal.hpp>
 #include <migraphx/instruction_ref.hpp>
-#include <migraphx/truncate_float.hpp>
+#include <migraphx/quantize_fp16.hpp>
 #include <migraphx/program.hpp>
 #include <migraphx/instruction.hpp>
 #include <migraphx/iterator_for.hpp>
@@ -35,8 +35,7 @@
 namespace migraphx {
 inline namespace MIGRAPHX_INLINE_NS {
 
-static void
-quantize_module(module& m, const std::vector<std::string>& ins_names, shape::type_t float_type)
+static void quantize_module(module& m, const std::vector<std::string>& ins_names)
 {
     for(auto ins : iterator_for(m))
     {
@@ -53,14 +52,14 @@ quantize_module(module& m, const std::vector<std::string>& ins_names, shape::typ
 
         auto mod_inputs = ins->module_inputs();
         auto s          = ins->get_shape();
-        // Convert each of the inputs that are floating point to float type
+        // Convert each of the inputs that are floating point to fp16
         auto inputs = ins->inputs();
         std::transform(inputs.begin(), inputs.end(), inputs.begin(), [&](auto input) {
             auto input_type = input->get_shape().type();
             if(input_type != shape::float_type and input_type != shape::double_type)
                 return input;
             return m.insert_instruction(
-                ins, make_op("convert", {{"target_type", float_type}}), input);
+                ins, make_op("convert", {{"target_type", shape::half_type}}), input);
         });
 
         // Insert quantized ins
@@ -72,13 +71,13 @@ quantize_module(module& m, const std::vector<std::string>& ins_names, shape::typ
             auto outputs = ins->outputs();
             std::transform(
                 outputs.begin(), outputs.end(), outputs.begin(), [&](const auto gte_ins) {
-                    auto gte_ins_float_type =
+                    auto gte_ins_half =
                         m.insert_instruction(ins, gte_ins->get_operator(), converted_ins);
                     // Convert back to output type after quantizing
                     auto gte_converted = m.insert_instruction(
                         ins,
                         make_op("convert", {{"target_type", gte_ins->get_shape().type()}}),
-                        gte_ins_float_type);
+                        gte_ins_half);
                     // Replace output instruction
                     return m.replace_instruction(gte_ins, gte_converted);
                 });
@@ -97,7 +96,7 @@ quantize_module(module& m, const std::vector<std::string>& ins_names, shape::typ
     }
 }
 
-void truncate_float_pass::apply(module& m) const { quantize_module(m, ins_names, float_type); }
+void quantize_fp16_pass::apply(module& m) const { quantize_module(m, ins_names); }
 
 } // namespace MIGRAPHX_INLINE_NS
 } // namespace migraphx

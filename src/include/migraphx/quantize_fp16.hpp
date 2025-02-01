@@ -21,30 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef MIGRAPHX_GUARD_RTGLIB_TRUNCATE_FLOAT_HPP
-#define MIGRAPHX_GUARD_RTGLIB_TRUNCATE_FLOAT_HPP
+#ifndef MIGRAPHX_GUARD_RTGLIB_QUANTIZE_FP16_HPP
+#define MIGRAPHX_GUARD_RTGLIB_QUANTIZE_FP16_HPP
 
 #include <string>
 #include <vector>
 #include <migraphx/config.hpp>
-#include <migraphx/shape.hpp>
 
 namespace migraphx {
 inline namespace MIGRAPHX_INLINE_NS {
 
-struct program;
-struct module;
-
-/**
- * quantize a program to fp
- */
-struct MIGRAPHX_EXPORT truncate_float_pass
-{
-    std::vector<std::string> ins_names = {"all"};
-    shape::type_t float_type           = shape::float_type;
-    std::string name() const { return "truncate_float"; }
-    void apply(module& m) const;
-};
+/// encode string to base64
+std::string MIGRAPHX_EXPORT base64_encode(const std::string& str);
 
 } // namespace MIGRAPHX_INLINE_NS
 } // namespace migraphx
