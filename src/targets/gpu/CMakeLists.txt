@@ -251,9 +251,11 @@ rocm_clang_tidy_check(migraphx_gpu)
 
 set(MIGRAPHX_ENABLE_MLIR ON CACHE BOOL "")
 
+#set(rocMLIR_DIR C:/PROGRA~1/AMD/ROCm/rocMLIR/lib/cmake/mlir)
+
 if(MIGRAPHX_ENABLE_MLIR)
     # Find package rocMLIR
-    find_package(rocMLIR 1.0.0 CONFIG REQUIRED)
+    find_package(rocMLIR CONFIG REQUIRED HINT "L:/dev/PR_MIGraphX/deps/cget/pkg/ROCm__rocMLIR/install")
     message(STATUS "Build with rocMLIR::rockCompiler ${rocMLIR_VERSION}")
     target_compile_definitions(migraphx_gpu PRIVATE "-DMIGRAPHX_MLIR")
     # Make this private to avoid multiple inclusions of LLVM symbols.
