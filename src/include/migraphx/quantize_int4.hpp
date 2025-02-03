@@ -21,13 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-<<<<<<<< HEAD:src/include/migraphx/quantize_int4.hpp
 #ifndef MIGRAPHX_GUARD_RTGLIB_QUANTIZE_INT4_HPP
 #define MIGRAPHX_GUARD_RTGLIB_QUANTIZE_INT4_HPP
-========
-#ifndef MIGRAPHX_GUARD_RTGLIB_QUANTIZE_FP16_HPP
-#define MIGRAPHX_GUARD_RTGLIB_QUANTIZE_FP16_HPP
->>>>>>>> parent of 306122429 (Generic "truncate float" class for quantization (#3604)):src/include/migraphx/quantize_fp16.hpp
 
 #include <string>
 #include <vector>
@@ -36,7 +31,6 @@
 namespace migraphx {
 inline namespace MIGRAPHX_INLINE_NS {
 
-<<<<<<<< HEAD:src/include/migraphx/quantize_int4.hpp
 struct program;
 struct module;
 
@@ -49,10 +43,6 @@ struct MIGRAPHX_EXPORT quantize_int4_pass
     std::string name() const { return "quantize_int4"; }
     void apply(module& m) const;
 };
-========
-/// encode string to base64
-std::string MIGRAPHX_EXPORT base64_encode(const std::string& str);
->>>>>>>> parent of 306122429 (Generic "truncate float" class for quantization (#3604)):src/include/migraphx/quantize_fp16.hpp
 
 } // namespace MIGRAPHX_INLINE_NS
 } // namespace migraphx
