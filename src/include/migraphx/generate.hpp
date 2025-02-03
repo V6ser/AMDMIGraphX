@@ -29,6 +29,7 @@
 #include <migraphx/type_traits.hpp>
 #include <migraphx/config.hpp>
 #include <random>
+#include <cstdint>
 
 namespace migraphx {
 inline namespace MIGRAPHX_INLINE_NS {
