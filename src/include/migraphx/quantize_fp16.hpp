@@ -30,7 +30,19 @@
 
 namespace migraphx {
 inline namespace MIGRAPHX_INLINE_NS {
+  
+struct program;
+struct module;
 
+/**
+ * quantize a program to fp16
+ */
+struct MIGRAPHX_EXPORT quantize_fp16_pass
+{
+    std::vector<std::string> ins_names = {"all"};
+    std::string name() const { return "quantize_fp16"; }
+    void apply(module& m) const;
+};
 /// encode string to base64
 std::string MIGRAPHX_EXPORT base64_encode(const std::string& str);
 
